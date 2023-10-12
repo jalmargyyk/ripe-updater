@@ -2,6 +2,7 @@
 
 import os
 import boto3
+import time
 
 from botocore.exceptions import ClientError
 
@@ -15,11 +16,14 @@ class BackupManager:
     """
     def __init__(self):
         """
-        connect to s3 and ensures presence of the bucket
+        initialize backups
         """
         self.logger = LogManager().logger
 
         if S3_BACKUP == 'yes':
+            """
+            connect to s3 and ensures presence of the bucket
+            """
             self.logger.info(f"connect to s3 {S3_ENDPOINT_URL}")
             self.s3 = boto3.client(
                 service_name='s3',
@@ -36,8 +40,19 @@ class BackupManager:
                     self.logger.info("bucket already exists")
                 else:
                     raise error
+        elif LOCAL_BACKUP == 'yes':
+            """
+            check if local backup directory exists
+            """
+            if not os.path.exists(LOCAL_BACKUP_DIR):
+                msg = f'local backup directory {LOCAL_BACKUP_DIR} doesn\'t exist'
+                self.logger.critical(msg)
+                raise RuntimeError(msg)
+            else:
+                self.logger.info(f'making local backups to dir {LOCAL_BACKUP_DIR}')
         else:
             self.logger.info("S3-Backup disabled")
+            self.logger.info("Local backups disabled")
 
     def put(self, filename, content):
         """
@@ -49,7 +64,18 @@ class BackupManager:
                 Key=filename,
                 Body=content
             )
-        
+        elif LOCAL_BACKUP == 'yes':
+            os.environ['TZ'] = TIMEZONE
+            time.tzset()
+            utime        = time.strftime("%Y%m%dT%H%M")
+            basename     = ".".join(filename.split('.')[0:-1])
+            new_filename = f'{basename}_{utime}.json'
+            file = f'{LOCAL_BACKUP_DIR}/{new_filename}'
+            f = open(file, 'w')
+            f.write(content)
+            f.close()
+            self.logger.info(f"Wrote backup to {file}")
+
         return None
 
     def get(self, filename):
@@ -61,6 +87,13 @@ class BackupManager:
                 Bucket=S3_BUCKET,
                 Key=filename
             )['Body'].read()
+        elif LOCAL_BACKUP == 'yes':
+            file = f'{LOCAL_BACKUP_DIR}/{filename}'
+            self.logger.info(f"reading file {file}")
+            f       = open(file, 'r')
+            content = f.read()
+            f.close()
+            return content
         
         return ""
 
@@ -73,6 +106,8 @@ class BackupManager:
             self.logger.debug(f'{files=}')
             if files.get('Contents'):
                 return [o['Key'] for o in files['Contents']]
-        
+        elif LOCAL_BACKUP == 'yes':
+            files = os.listdir(LOCAL_BACKUP_DIR)
+            return files
         return []
 

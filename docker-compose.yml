@@ -1,6 +1,6 @@
 version: "3.9"
 services:
   ripe-updater:
-    image: interdotlink/ripe-updater:latest
+    image: ripe-updater/feat-local-bu
     env_file:
       - .env
