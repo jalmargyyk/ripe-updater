@@ -94,7 +94,7 @@ class BackupManager:
             content = f.read()
             f.close()
             return content
-        
+ 
         return ""
 
     def list(self):
