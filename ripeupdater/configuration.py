@@ -151,3 +151,21 @@ S3_SECRET_ACCESS_KEY = getenv('S3_SECRET_ACCESS_KEY')
 # values: string
 # default: -
 S3_BUCKET = getenv('S3_BUCKET')
+
+# LOCAL_BACKUP
+# enable or disable local backups
+# values: yes/no
+# default: no
+LOCAL_BACKUP = getenv('LOCAL_BACKUP', 'no')
+
+# LOCAL_BACKUP_DIR
+# location of backpus
+# values: path
+# default: /opt/ripeupdater/backups
+LOCAL_BACKUP_DIR = getenv('LOCAL_BACKUP_DIR', '/opt/ripeupdater/backups')
+
+# TIMEZONE
+# current timezone
+# values: string
+# default: 'Europe/Helsinki'
+TIMEZONE = 'Europe/Helsinki'
