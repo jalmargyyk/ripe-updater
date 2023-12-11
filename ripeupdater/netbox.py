@@ -141,9 +141,6 @@ class ObjectBuilder:
         if type(ripe_template) is dict:
             ripe_template = ripe_template['label']
 
-        if not ripe_report:
-            return None
-
         try:
             netbox_template = ripe_template.upper()
         except TypeError:
@@ -157,17 +154,15 @@ class ObjectBuilder:
 
     def ripe_report(self):
         """
-        Returns ripe_report as bool
+        Returns ripe_report value (YES, NO, DELETE or None)
         """
         data = self.webhook
 
         custom_fields = data['data']['custom_fields']
         ripe_report = custom_fields.get('ripe_report', False)
         self.logger.info(f'Report to RIPE is set: {ripe_report=}')
-        if ripe_report is True:
-            return ripe_report
-        else:
-            return False
+
+        return ripe_report 
 
     def country(self):
         """

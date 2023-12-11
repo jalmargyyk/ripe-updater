@@ -91,28 +91,24 @@ def update():
         return msg, 400
 
     try:
-        # If ripe_report not selected or false then delete object from RIPE-DB
-        if ripe_report is not True:
-            logger.info(f"ripe_report is false, deleting prefix {webhook['data']['prefix']}")
+        # If the webhook event is deleted or ripe_report is DELETE,
+        # delete the object
+        if webhook['event'] == 'deleted' or ripe_report == "DELETE":
+            logger.info(f"prefix deleted in NetBox, deleting prefix {webhook['data']['prefix']} in RIPE DB")
             netbox_object = ObjectBuilder(webhook)
             ripe = RipeObjectManager(netbox_object, backup)
             ripe.delete_object()
-
+            return '', 204
+        # If ripe_report is No, do nothing
+        if ripe_report == "NO" or ripe_report is None:
+            logger.info(f"ripe_report is NO or not defined, doing nothing!")
+        elif ripe_report == "YES":
+            logger.info(f"updating prefix {webhook['data']['prefix']}")
+            netbox_object = ObjectBuilder(webhook)
+            ripe = RipeObjectManager(netbox_object, backup)
+            ripe.push_object()
         else:
-            # If the incoming webhook updated or created, (not deleted) then push webhook to
-            # RIPE-DB
-            if webhook['event'] != 'deleted':
-                logger.info(f"updating prefix {webhook['data']['prefix']}")
-                netbox_object = ObjectBuilder(webhook)
-                ripe = RipeObjectManager(netbox_object, backup)
-                ripe.push_object()
-            else:
-                # If the incoming webhook is selected as deleted then also delete if from
-                # RIPE-DB
-                logger.info(f"prefix deleted in NetBox, deleting prefix {webhook['data']['prefix']} in RIPE DB")
-                netbox_object = ObjectBuilder(webhook)
-                ripe = RipeObjectManager(netbox_object, backup)
-                ripe.delete_object()
+            logger.info("No match, something went wrong!")
     except NotRoutedNetwork:
         return 'NotRoutedNetwork, skipping request', 200
     except ErrorSmallPrefix:
