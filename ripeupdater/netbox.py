@@ -171,8 +171,9 @@ class ObjectBuilder:
         data = self.webhook
 
         try:
-            site_slug = data['data']['site']['slug']
-            country = self.country_netbox(site_slug)
+            scope_slug = data['data']['scope']
+            #site_slug = data['data']['site']['slug']
+            #country = self.country_netbox(site_slug)
         except TypeError:
             default_country = DEFAULT_COUNTRY.upper()
             if countries_by_alpha2[default_country]:
@@ -180,7 +181,10 @@ class ObjectBuilder:
             else:
                 self.logger.error('Default country must be in iso alpha2 format')
 
-        self.logger.info(f'Country: {str(country)}')
+#        self.logger.info(f'Country: {str(country)}')
+
+        self.logger.info('Country overridden to FI')
+        country = 'FI'
         return country
 
     def org(self):
